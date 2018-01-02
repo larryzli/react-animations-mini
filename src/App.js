@@ -1,24 +1,29 @@
-import React, { Component } from 'react';
-import Card from './Card';
-import './App.css';
-
+import React, { Component } from "react";
+import Card from "./Card";
+import "./App.css";
+import { TransitionMotion, spring } from "react-motion";
 
 export default class App extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            todos: [{
-                key: 't1',
-                data: {
-                    todo: 'Learn react-motion',
-                    completed: false
+            todos: [
+                {
+                    key: "t1",
+                    data: {
+                        todo: "Learn react-motion",
+                        completed: false
+                    }
                 }
-            }]
-        }
+            ]
+        };
         this.addTodo = this.addTodo.bind(this);
         this.removeTodo = this.removeTodo.bind(this);
         this.toggle = this.toggle.bind(this);
+        this.getDefaultStyles = this.getDefaultStyles.bind(this);
+        this.getStyles = this.getStyles.bind(this);
+        this.willEnter = this.willEnter.bind(this);
     }
 
     addTodo(e) {
@@ -29,22 +34,22 @@ export default class App extends Component {
                 todo: this.inputRef.value,
                 completed: false
             }
-        }
+        };
         this.setState({
             todos: [...this.state.todos, newTodo]
-        })
-        this.inputRef.value = '';
+        });
+        this.inputRef.value = "";
     }
 
-    removeTodo( id ) {
-        let todos = this.state.todos.filter( todo => todo.key  !== id );
+    removeTodo(id) {
+        let todos = this.state.todos.filter(todo => todo.key !== id);
         this.setState({
             todos: todos
-        })
+        });
     }
 
-    toggle( id ) {
-        let todos = this.state.todos.map( todo => {
+    toggle(id) {
+        let todos = this.state.todos.map(todo => {
             if (todo.key === id) {
                 todo.data.completed = !todo.data.completed;
             }
@@ -52,39 +57,79 @@ export default class App extends Component {
         });
         this.setState({
             todos: todos
-        })
+        });
     }
 
+    getDefaultStyles() {
+        return this.state.todos.map(todo => {
+            return Object.assign({}, todo, {
+                style: { height: 0, opacity: 0 }
+            });
+        });
+    }
 
+    getStyles() {
+        return this.state.todos.map(todo => {
+            return Object.assign({}, todo, {
+                style: { height: spring(65), opacity: spring(1) }
+            });
+        });
+    }
+
+    willEnter() {
+        return {
+            height: 0,
+            opacity: 0
+        };
+    }
+
+    willLeave() {
+        return {
+            height: spring(0),
+            opacity: spring(0)
+        };
+    }
     render() {
-
-        const todos = this.state.todos.map( (todo, i) => {
-            return <Card 
-                        key={i}
-                        toggle={ this.toggle }
-                        removeTodo={ this.removeTodo } 
-                        todo={ todo } /> 
-        })
-
-        return(
-            <div className='app'>
+        return (
+            <div className="app">
                 <h1>to-dos</h1>
-                <div className='todos-wrap'>
-                    <div className='right-arrow'>></div> 
-                    <div className='input-container'>
-                        <form onSubmit={ this.addTodo }>
-                            <input 
-                                ref={ input => this.inputRef = input}
-                                placeholder='add new to-do...'
-                                className='todo-inp'
-                                /> 
-                        </form>   
+                <div className="todos-wrap">
+                    <div className="right-arrow">></div>
+                    <div className="input-container">
+                        <form onSubmit={this.addTodo}>
+                            <input
+                                ref={input => (this.inputRef = input)}
+                                placeholder="add new to-do..."
+                                className="todo-inp"
+                            />
+                        </form>
                     </div>
-                    <div>
-                        { todos }
-                    </div>  
-                </div> 
-            </div> 
-        )
+                    <TransitionMotion
+                        defaultStyles={this.getDefaultStyles()}
+                        styles={this.getStyles()}
+                        willEnter={this.willEnter}
+                        willLeave={this.willLeave}
+                    >
+                        {styles => {
+                            // console.log(styles);
+                            return (
+                                <div>
+                                    {styles.map(todo => {
+                                        return (
+                                            <Card
+                                                key={todo.key}
+                                                toggle={this.toggle}
+                                                removeTodo={this.removeTodo}
+                                                todo={todo}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            );
+                        }}
+                    </TransitionMotion>
+                </div>
+            </div>
+        );
     }
 }
